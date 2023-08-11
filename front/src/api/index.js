@@ -1,0 +1,1 @@
+export { default as charactersApi } from './CharactersApi'
