@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 
-export const useForm = ( initialForm = {}) => {
-  
-    const [ formState, setFormState ] = useState( initialForm );
+export const useForm = (initialForm = {}) => {
+
+    const [formState, setFormState] = useState(initialForm);
 
 
     useEffect(() => {
-        setFormState( initialForm );
-    }, [ initialForm ])
+        setFormState(initialForm);
+    }, [initialForm])
 
     const onInputChange = ({ target }) => {
         const { name, value } = target;
@@ -15,10 +15,11 @@ export const useForm = ( initialForm = {}) => {
             ...formState,
             [name]: value
         });
+        console.log({ formState })
     }
 
     const onResetForm = () => {
-        setFormState( initialForm );
+        setFormState(initialForm);
     }
 
     return {

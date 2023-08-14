@@ -20,3 +20,6 @@
 .input-filter::placeholder {
   color: #fff;
 }
+.card-item-character {
+  cursor: pointer;
+}

@@ -1,15 +1,15 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useDispatch, useSelector } from "react-redux"
-import { setCharacters } from '../store'
+import { setCharacters, setFilters } from '../store'
 import { useEffect, useState } from "react"
-import { useFetch, useForm } from "./"
-import { getValuesFilter } from "../helpers"
+import { useFetch } from "./"
+import { getStorageFilters, getValuesFilter } from "../helpers"
 export const useCharacterFetch = () => {
 
-  const [ loadInitial, setLoadInitial ] = useState(false)
-  const [ currentPage, setCurrentPage ] = useState(getValuesFilter?.currentPage || 1)
-  const { search, status, gender,  onInputChange, onResetForm } = useForm(getValuesFilter)
-  const { items, info } = useSelector(state => state.characters)
+  const [loadInitial, setLoadInitial] = useState(false)
+  const { items, info, filters } = useSelector(state => state.characters)
+  const { search, status, gender, currentPage } = filters
+
   const { data, isLoading, hasError, getFetch } = useFetch(`/character/?name=${search}&status=${status}&gender=${gender}&page=${currentPage}`)
 
   const dispatch = useDispatch()
@@ -20,34 +20,37 @@ export const useCharacterFetch = () => {
 
   const onHandleChange = (evt) => {
     setLoadInitial(true)
-    onInputChange(evt)
+    const { name, value } = evt.target;
+    dispatch(setFilters({ [name]: value }))
+
   }
 
-  const onHangleClickPrev = (event) =>  {
+  const onHangleClickPrev = (event) => {
     setLoadInitial(true)
     event.preventDefault();
-    setCurrentPage((prev) => prev - 1)
+    dispatch(setFilters({ currentPage: currentPage - 1 }))
+
   }
 
-  const onHangleClickNext = (event) =>  {
+  const onHangleClickNext = (event) => {
     setLoadInitial(true)
     event.preventDefault();
-    setCurrentPage((prev) => prev + 1)
+    dispatch(setFilters({ currentPage: currentPage + 1 }))
   }
 
   const onClearFilters = () => {
     setLoadInitial(true)
     localStorage.clear()
-    onResetForm()
+    dispatch(setFilters(getValuesFilter))
     window.location.reload(false);
   }
 
   useEffect(() => {
-    if(data) {
-      dispatch( setCharacters(data) )
+    if (data) {
+      dispatch(setCharacters(data))
     }
-    if(hasError){
-      dispatch( setCharacters({
+    if (hasError) {
+      dispatch(setCharacters({
         info: {
           "count": null,
           "pages": null,
@@ -60,12 +63,25 @@ export const useCharacterFetch = () => {
   }, [data])
 
   useEffect(() => {
-    if(loadInitial) {
-      const filters = JSON.stringify({ search,status,gender,currentPage })
-      localStorage.setItem( 'filters',filters )
+    const filters = getStorageFilters()
+    dispatch(setFilters(filters))
+    getCharacters()
+  }, [])
+
+
+  const changeFilters = () => {
+    if (loadInitial) {
+      const currentFilter = getStorageFilters()
+      const filters = JSON.stringify({ ...currentFilter, search, status, gender, currentPage })
+      localStorage.setItem('filters', filters)
       getCharacters()
     }
-  }, [ search,status,gender,currentPage ])
+  }
+
+
+  useEffect(() => {
+    changeFilters()
+  }, [filters])
 
   return {
     items,
@@ -76,7 +92,6 @@ export const useCharacterFetch = () => {
     gender,
     loadInitial,
     currentPage,
-    setCurrentPage,
     getCharacters,
     setLoadInitial,
     onHandleChange,
